@@ -1,3 +1,32 @@
+<?php
+    session_start();
+    require_once 'config/db.php';
+
+    if(isset($_GET['delete'])) {
+        $id = $_GET['delete'];
+        //ไปดึงชื่อไฟล์รูปภาพออกมา เพื่อลบไฟล์รูปภาพจาก Folder
+        $sql = "SELECT img FROM users WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$id]);
+        $user = $stmt->fetch();
+        $imgPath = "upload/" . $user['img'];
+        if(file_exists($imgPath)) {
+            unlink($imgPath);
+        }
+
+        //ลบข้อมูลใน Database
+        $sql = "DELETE FROM users WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$id]);
+        if($stmt) {
+            $_SESSION['success'] = "User deleted successfully";
+            header('location: index.php');
+        } else {
+            $_SESSION['error'] = "Can't delete user";
+            header('location: index.php');
+        }
+    }
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -35,11 +64,11 @@
                         <div class="mb-3">
                             <label for="img" class="col-form-label">Image:</label>
                             <input type="file" required class="form-control" id="imgInput" name="img">
-                            <img id="imgPreview" >
+                            <img width="100%" class="mt-2" id="imgPreview" >
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-dangerous" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" name="sumbit" class="btn btn-success">Sumbit</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" name="submit" class="btn btn-success">Sumbit</button>
                         </div>
                     </form>
                 </div>
@@ -56,9 +85,88 @@
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">Add User</button>
             </div>
         </div>
+        <hr>
+        <!-- ต้องการใช้เงื่อนไขเพื่อแสดงข้อความเมื่อมีการเพิ่มข้อมูลสำเร็จหรือไม่ -->
+        <?php if (isset($_SESSION['success'])) {?>
+            <div class="alert alert-success" role="alert">
+                <?php echo $_SESSION['success']; 
+                unset($_SESSION['success']);
+                ?>
+            </div>
+        <?php }?>
+        <!-- เป็นเทคนิคการเขียนสลับกันระหว่า php เเละ html ให้อยู่ร่วมกันได้ -->
+        <?php if (isset($_SESSION['error'])) {?>
+            <div class="alert alert-danger" role="alert">
+                <?php echo $_SESSION['error']; 
+                unset($_SESSION['error']);
+                ?>
+            </div>
+        <?php }?>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">No</th>
+                    <th scope="col">First Name</th>
+                    <th scope="col">Last Name</th>
+                    <th scope="col">Position</th>
+                    <th scope="col">Img</th>
+                    <th scope="col">Actions</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $sql = "SELECT * FROM users";
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+                $users = $stmt->fetchAll();
+                if (!$users) {
+                    echo "<tr><td colspan='6'>No users found</td></tr>";
+                } else {
+                    foreach ($users as $user) {
+                        ?>
+                        <tr>
+                            <th scope="row"><?= $user['id']; ?></th>
+                            <td><?= $user['f_name']; ?></td>
+                            <td><?= $user['l_name']; ?></td>
+                            <td><?= $user['position']; ?></td>
+                            <td><img src="upload/<?= $user['img'] ?>" width="100px" height="auto" class="rounded" alt=""></td>
+                            <td>
+                                <a href="edit.php?id=<?= $user["id"]?>" class="btn btn-warning">edit</a>
+
+                                <!-- ?delete เหมือน index.php?delete เวลาเอาไปใช้เลยต้องใช้เป็น delete -->
+                                <a href="?delete=<?= $user["id"]?>" class="btn btn-danger" onclick="return confirm('Confirm delete its data')">delete</a>
+                            </td>
+                        </tr>
+                    <?php }
+                } ?>
+            </tbody>
+        </table>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script>
+        const imgInput = document.getElementById('imgInput');
+        const imgPreview = document.getElementById('imgPreview');
+
+        // imgInput.addEventListener('change', function() {
+        //     const file = this.files[0];
+        //     if (file) {
+        //         const reader = new FileReader();
+        //         reader.onload = function() {
+        //             imgPreview.src = reader.result;
+        //         }
+        //         reader.readAsDataURL(file);
+        //     }
+        // });
+        imgInput.onchange = evt => {
+            const [file] = imgInput.files
+            if (file) {
+                imgPreview.src = URL.createObjectURL(file)
+            }
+        }
+    </script>
 </body>
 
 </html>
