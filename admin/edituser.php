@@ -1,12 +1,13 @@
 <?php 
-    session_start(); 
-    require_once 'config/db.php';
+
+    require_once '../config/db.php';
+    require_once '../auth/authAdmin.php';
 
     if(isset($_POST['update'])) {
         $id = $_POST['id'];  //รับ input ที่มี name เป็น id มา
         $f_name = $_POST['f_name'];
         $l_name = $_POST['l_name'];
-        $position = $_POST['position'];
+        $role = $_POST['role'];
         $img = $_FILES['img'];
         
         $img2 = $_POST['img2'];
@@ -21,9 +22,10 @@
         $extention = explode('.', $img_name);
         $img_actual_ext = strtolower(end($extention));
         $imgNew = rand() . "." . $img_actual_ext;
-        $imgPath = "upload/" . $imgNew;
+        $imgPath = "../upload/" . $imgNew;
         $maxSize = 2 * 1024 * 1024;
 
+        // ตรวจสอบว่ามีการเปลี่ยนรูปภาพหรือไม่
         if($upload != "") {
             echo "upload new img";
             if(in_array($img_actual_ext, $allowed)) {
@@ -32,28 +34,28 @@
                         move_uploaded_file($img_tmp, $imgPath);
                     } else {
                         $_SESSION['error'] = "Don't found your file";
-                        header('location: index.php');
+                        header('location: userlist');
                     }
                 } else {
                     $_SESSION['error'] = "There was an error uploading your file";
-                    header('location: index.php');
+                    header('location: userlist');
                 }
             } else {
                 $_SESSION['error'] = "You cannot upload files of this type";
-                header('location: index.php');
+                header('location: userlist');
             }
         }else {
             $imgNew = $img2;
         }
-        $sql = "UPDATE users SET f_name = ?, l_name = ?, position = ?, img = ? WHERE id = ?";
+        $sql = "UPDATE users SET f_name = ?, l_name = ?, role = ?, img = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->execute([$f_name, $l_name, $position, $imgNew, $id]);
+        $stmt->execute([$f_name, $l_name, $role, $imgNew, $id]);
         if($stmt){
             $_SESSION['success'] = "User updated successfully";
-            header('location: index.php');
+            header('location: userlist');
         }else {
             $_SESSION['error'] = "Can't update user";
-            header('location: index.php');
+            header('location: userlist');
         }
     } 
 ?>
@@ -75,7 +77,7 @@
         </div>
         <hr>
         <!-- ส่ง action ไปที่ไฟล์ของตัวเอง -->
-        <form action="edit.php" method="post" enctype="multipart/form-data">
+        <form action="edituser.php" method="post" enctype="multipart/form-data">
             <?php
                 if (isset($_GET['id'])) {
                     $id = $_GET['id'];
@@ -96,13 +98,13 @@
                 <input type="text" required class="form-control" name="l_name" value="<?= $user['l_name']; ?>">
                     </div>
                     <div class=" mb-3">
-                <label for="position" class="col-form-label">Position:</label>
-                <input type="text" required class="form-control" name="position" value="<?= $user['position']; ?>">
+                <label for="role" class="col-form-label">Position:</label>
+                <input type="text" required class="form-control" name="role" value="<?= $user['role']; ?>">
                     </div>
                     <div class=" mb-3">
                 <label for="img" class="col-form-label">Image:</label>
                 <input type="file" class="form-control" id="imgInput" name="img">
-                <img width="25%" height="25%" class="mt-2 rounded mx-auto d-block" id="imgPreview" src="upload/<?= $user['img']; ?>">
+                <img width="25%" height="25%" class="mt-2 rounded mx-auto d-block" id="imgPreview" src="../upload/<?= $user['img']; ?>">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="history.back()">Back</button>

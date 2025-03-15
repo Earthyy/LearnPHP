@@ -1,3 +1,7 @@
+<?php
+require_once '../auth/authuser.php';
+?>
+
 <!doctype html>
 <html lang="en">
 
@@ -32,7 +36,7 @@
 
 
   <!-- Custom styles for this template -->
-  <link href="style/product.css" rel="stylesheet">
+  <link href="../style/product.css" rel="stylesheet">
 </head>
 
 <body>
@@ -49,12 +53,8 @@
             d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83m13.79-4l-5.74 9.94" />
         </svg>
       </a>
-      <!-- <a class="py-2 d-none d-md-inline-block" href="user/signUp.php">sign up</a> | <a class="py-2 d-none d-md-inline-block" href="user/login.php">login</a> -->
-      <div class="d-flex align-items-center">
-        <a class="py-2 d-none d-md-inline-block" href="user/signUp.php">sign up</a>
-        <a class="mx-2">|</a>
-        <a class="py-2 d-none d-md-inline-block" href="user/login.php">login</a>
-      </div>
+      <a class="py-2 d-none d-md-inline-block" href="">Cart</a>
+      <a class="py-2 d-none d-md-inline-block" href="../index.php" onclick="<?php unset($_SESSION['userId']) ?>">Log out</a>
     </nav>
   </header>
 
